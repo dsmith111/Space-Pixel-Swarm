@@ -7,7 +7,8 @@ public class UnitAI : MonoBehaviour
 {
 
     public GameObject planetNode;
-
+    public LayerMask ableToHit;
+    public GameObject projectile;
     // States for Moving
     private enum State
     {
@@ -35,15 +36,20 @@ public class UnitAI : MonoBehaviour
     private float orbitalLayer;
     [SerializeField]
     private float attackDistance = 15f;
+    public float attackDelay = 0.3f;
+    private float timeSinceAttack;
+    public float attackDamage = 1f;
     private GameObject enemy;
     [SerializeField]
     private float scanDelay = 3f;
     private float timeOfScan;
+    public float health = 4f;
 
     // Start is called before the first frame update
     void Start()
     {
         timeOfScan = Time.time;
+        timeSinceAttack = Time.time;
     }
 
     // Update is called once per frame
@@ -129,7 +135,7 @@ public class UnitAI : MonoBehaviour
     }
     // Attack Nearby Enemies in Sight
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("enemy") && Mathf.Abs(timeOfScan - Time.time) >= scanDelay && attacking != CombatState.firing)
         {
@@ -150,22 +156,52 @@ public class UnitAI : MonoBehaviour
         // Attack Enemy If Close Enough
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("enemy");
         //get closest characters (to referencePos)
-        var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
+        float varySelection = Random.value;
+        GameObject target;
+        if(varySelection > 0.2)
+        {
+            target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
+        }
+        else
+        {
+            var targetQuery = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).Take(5).ToArray();
+            target = targetQuery[Random.Range(0, targetQuery.Length)];
+        }
+        
 
         if (target && Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
         {
             // Attack 
+            if(Mathf.Abs(timeSinceAttack - Time.time) < attackDelay)
+            {
+                return;
+            }
             Vector2 dir = target.transform.position - transform.position;
-            Debug.Log(dir.magnitude);
-            Debug.Log(attacking);
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, dir.magnitude);
-            Debug.DrawLine(transform.position, target.transform.position, Color.red);
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, dir.magnitude, ableToHit);
+
+            if(hit.collider != null && hit.collider.CompareTag("enemy"))
+            {
+                FireEffect(hit.collider.gameObject);
+                //Debug.DrawLine(transform.position, target.transform.position, Color.red);
+                //hit.collider.gameObject.GetComponent<EnemyUnitAI>().health -= attackDamage;
+            }
+            timeSinceAttack = Time.time;
+            
             return;
         }
         else
         {
             attacking = CombatState.idle;
         }
+    }
+
+    void FireEffect(GameObject target)
+    {
+        Vector3 diff = (transform.position - target.transform.position);
+        float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
+        GameObject bullet = Instantiate(projectile, transform.position + (-diff.normalized), Quaternion.Euler(0f, 0f, rot_z+180));
+        bullet.GetComponent<ProjectileLogic>().target = target;
+        bullet.GetComponent<ProjectileLogic>().attackDamage = attackDamage;
     }
 
 }

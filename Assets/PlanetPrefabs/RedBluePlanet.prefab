@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6001924331472419204}
   - component: {fileID: 6001924331472419205}
   - component: {fileID: 6001924331472419207}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Atmo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77,6 +77,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82597f7729e1cee4686c4439d22fb145, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  state: 0
 --- !u!1 &6001924332038792669
 GameObject:
   m_ObjectHideFlags: 0
@@ -170,7 +171,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6001924332146857136}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Node1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
