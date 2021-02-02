@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class UnitAI : MonoBehaviour
+public class EnemyUnitAI : MonoBehaviour
 {
 
     public GameObject planetNode;
     public LayerMask ableToHit;
     public GameObject projectile;
+    public string enemyTag = "unit";
     public float hitBoxRadius = 0;
     // States for Moving
     private enum State
@@ -56,7 +57,7 @@ public class UnitAI : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (planetNode.GetComponent<PlanetController>().state == PlanetController.State.enemy && attacking == CombatState.firing)
+        if (planetNode.GetComponent<PlanetController>().state == PlanetController.State.friendly)
         {
             combat = PlanetCombat.attack;
         }
@@ -77,17 +78,17 @@ public class UnitAI : MonoBehaviour
         if (diffMag >= orbitalLayer && diffMag < orbitalLayer + 0.3f)
         {
             OrbitPlanet();
-            if (state != State.idle && attacking != CombatState.firing && combat != PlanetCombat.attack)
+            if (state != State.idle && attacking != CombatState.firing)
             {
-                if(planetNode.GetComponent<PlanetController>().state == PlanetController.State.empty || planetNode.GetComponent<PlanetController>().state == PlanetController.State.enemy)
+                if (planetNode.GetComponent<PlanetController>().state == PlanetController.State.empty)
                 {
-                    planetNode.GetComponent<PlanetController>().state = PlanetController.State.friendly;
+                    planetNode.GetComponent<PlanetController>().state = PlanetController.State.enemy;
                 }
                 state = State.idle;
             }
-            
+
         }
-        else if(diffMag < orbitalLayer)
+        else if (diffMag < orbitalLayer)
         {
             state = State.away;
             MoveToOrbit();
@@ -99,7 +100,7 @@ public class UnitAI : MonoBehaviour
         }
 
         // Attack if able
-        if(attacking == CombatState.firing)
+        if (attacking == CombatState.firing)
         {
             AttackEnemy();
         }
@@ -109,7 +110,6 @@ public class UnitAI : MonoBehaviour
         {
             Death();
         }
-
 
     }
 
@@ -125,13 +125,13 @@ public class UnitAI : MonoBehaviour
     {
         Vector3 diff = (planetNode.transform.position - gameObject.transform.position);
         float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-        if(combat == PlanetCombat.defense)
+        if (combat == PlanetCombat.defense)
         {
             gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z);
         }
         else
         {
-            gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z+180f);
+            gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z + 180f);
         }
         gameObject.GetComponent<Rigidbody2D>().velocity = transform.up.normalized;
     }
@@ -143,14 +143,14 @@ public class UnitAI : MonoBehaviour
         {
             Vector3 diff = (planetNode.transform.position - gameObject.transform.position);
             float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-            gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z-90f);
+            gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z - 90f);
             gameObject.GetComponent<Rigidbody2D>().velocity = transform.up.normalized;
         }
-        else if(state == State.away)
+        else if (state == State.away)
         {
             Vector3 diff = (planetNode.transform.position - gameObject.transform.position);
             float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-            gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z+90);
+            gameObject.transform.rotation = Quaternion.Euler(0f, 0f, rot_z + 90);
             gameObject.GetComponent<Rigidbody2D>().velocity = transform.up.normalized;
         }
     }
@@ -158,10 +158,10 @@ public class UnitAI : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag("enemy") && Mathf.Abs(timeOfScan - Time.time) >= scanDelay && attacking != CombatState.firing)
+        if (collision.gameObject.CompareTag(enemyTag) && Mathf.Abs(timeOfScan - Time.time) >= scanDelay && attacking != CombatState.firing)
         {
             // Attack Enemy If Close Enough
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("enemy");
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
             //get 3 closest characters (to referencePos)
             var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
             if (Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
@@ -170,16 +170,16 @@ public class UnitAI : MonoBehaviour
             }
             timeOfScan = Time.time;
         }
-       
+
     }
     void AttackEnemy()
     {
         // Attack Enemy If Close Enough
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("enemy");
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
         //get closest characters (to referencePos)
         float varySelection = Random.value;
         GameObject target;
-        if(varySelection > 0.2)
+        if (varySelection > 0.6)
         {
             target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
         }
@@ -188,26 +188,26 @@ public class UnitAI : MonoBehaviour
             var targetQuery = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).Take(5).ToArray();
             target = targetQuery[Random.Range(0, targetQuery.Length)];
         }
-        
+
 
         if (target && Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
         {
             // Attack 
-            if(Mathf.Abs(timeSinceAttack - Time.time) < attackDelay)
+            if (Mathf.Abs(timeSinceAttack - Time.time) < attackDelay + Random.Range(0, attackDelay/10))
             {
                 return;
             }
             Vector2 dir = target.transform.position - transform.position;
             RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, dir.magnitude, ableToHit);
 
-            if(hit.collider != null && hit.collider.CompareTag("enemy"))
+            if (hit.collider != null && hit.collider.CompareTag(enemyTag))
             {
                 FireEffect(hit.collider.gameObject);
                 //Debug.DrawLine(transform.position, target.transform.position, Color.red);
                 //hit.collider.gameObject.GetComponent<EnemyUnitAI>().health -= attackDamage;
             }
             timeSinceAttack = Time.time;
-            
+
             return;
         }
         else
@@ -220,7 +220,7 @@ public class UnitAI : MonoBehaviour
     {
         Vector3 diff = (transform.position - target.transform.position);
         float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-        GameObject bullet = Instantiate(projectile, transform.position + (-diff.normalized), Quaternion.Euler(0f, 0f, rot_z+180));
+        GameObject bullet = Instantiate(projectile, transform.position + (-diff.normalized), Quaternion.Euler(0f, 0f, rot_z + 180));
         bullet.GetComponent<ProjectileLogic>().target = target;
         bullet.GetComponent<ProjectileLogic>().attackDamage = attackDamage;
     }
