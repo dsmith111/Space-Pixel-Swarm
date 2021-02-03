@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7333187641466860455}
   - component: {fileID: 7333187641466860454}
+  - component: {fileID: 7260386086464090840}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -44,3 +45,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectedPlanet: {fileID: 0}
+  defenseLayer: 5.3
+  attackLayer: 7
+  command: 0
+--- !u!114 &7260386086464090840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7333187641466860453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e420bd1da27ff409cfa1fbdee7a25d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemsToPool:
+  - amountToPool: 100
+    objectToPool: {fileID: 7661297085335942128, guid: f11a57beec61589458ddba666f498375,
+      type: 3}
+    shouldExpand: 1
+  - amountToPool: 100
+    objectToPool: {fileID: 188123620836569453, guid: f7dcda0ab50f5a94cbf95c24c4718775,
+      type: 3}
+    shouldExpand: 1
+  pooledObjects: []

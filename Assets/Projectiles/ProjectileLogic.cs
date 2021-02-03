@@ -10,40 +10,45 @@ public class ProjectileLogic : MonoBehaviour
     private bool fired = false;
     public float timeToLive = 5f;
     private float targetRadius = 0;
+    private float instTime;
 
 
-    private void Start()
+    private void OnEnable()
     {
-        if (target.CompareTag("unit"))
-        {
-            targetRadius = target.GetComponent<UnitAI>().hitBoxRadius;
-        }
-        else if (target.CompareTag("enemy"))
-        {
-           targetRadius = target.GetComponent<EnemyUnitAI>().hitBoxRadius;
-        }
+        instTime = Time.time;
+     //   if (target.CompareTag("unit"))
+     //   {
+   //         targetRadius = target.GetComponent<UnitAI>().hitBoxRadius;
+//        }
+//        else if (target.CompareTag("enemy"))
+ //       {
+  //         targetRadius = target.GetComponent<EnemyUnitAI>().hitBoxRadius;
+  //      }
     }
 
     // Update is called once per frame
     void Update()
     {
         transform.Translate((Vector3.right) * Time.deltaTime * moveSpeed);
-        if (Mathf.Abs((transform.position - target.transform.position).magnitude) <= targetRadius)
-        {
-            if (target.CompareTag("unit"))
-            {
-                target.GetComponent<UnitAI>().health -= attackDamage;
-            }
-            else if (target.CompareTag("enemy"))
-            {
-                target.GetComponent<EnemyUnitAI>().health -= attackDamage;
-            }
+       // if (Mathf.Abs((transform.position - target.transform.position).magnitude) <= targetRadius)
+        //{
+         //   if (target.CompareTag("unit"))
+          //  {
+           //     target.GetComponent<UnitAI>().health -= attackDamage;
+           // }
+           // else if (target.CompareTag("enemy"))
+           // {
+            //    target.GetComponent<EnemyUnitAI>().health -= attackDamage;
+           // }
             
-            Destroy(gameObject);
+          //  Destroy(gameObject);
+       // }
+       if(Time.time - instTime >= 5f)
+        {
+            gameObject.SetActive(false);
         }
         if (!fired)
         {
-            Destroy(gameObject, timeToLive);
             fired = true;
         }
     }

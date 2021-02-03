@@ -31,6 +31,8 @@ public class ButtonSpawner : MonoBehaviour
         if (planet != null)
         {
             planet.GetComponent<PlanetController>().SpawnUnit(unit);
+            ResourceTracker.SharedInstance.unitCount += 1;
+            ResourceTracker.SharedInstance.UpdateStats();
         }
 
     }

@@ -7,6 +7,8 @@ TagManager:
   - unit
   - enemy
   - planet
+  - fighterbullet
+  - enemybullet
   layers:
   - Default
   - TransparentFX

@@ -98,6 +98,19 @@ public class EnemyUnitAI : MonoBehaviour
             state = State.to;
             MoveToOrbit();
         }
+        // Scan For Enemies
+        // Attack Enemy If Close Enough
+        if (Time.time - timeOfScan > scanDelay)
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
+            //get 3 closest characters (to referencePos)
+            var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
+            if (Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
+            {
+                attacking = CombatState.firing;
+            }
+            timeOfScan = Time.time;
+        }
 
         // Attack if able
         if (attacking == CombatState.firing)
@@ -156,19 +169,13 @@ public class EnemyUnitAI : MonoBehaviour
     }
     // Attack Nearby Enemies in Sight
 
-    private void OnTriggerStay2D(Collider2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag(enemyTag) && Mathf.Abs(timeOfScan - Time.time) >= scanDelay && attacking != CombatState.firing)
-        {
-            // Attack Enemy If Close Enough
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
-            //get 3 closest characters (to referencePos)
-            var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
-            if (Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
-            {
-                attacking = CombatState.firing;
-            }
-            timeOfScan = Time.time;
+
+        if (collision.IsTouching(gameObject.GetComponent<CircleCollider2D>()) && collision.CompareTag("fighterbullet"))
+        { 
+            health -= collision.GetComponent<ProjectileLogic>().attackDamage;
+            collision.gameObject.SetActive(false);
         }
 
     }
@@ -220,7 +227,14 @@ public class EnemyUnitAI : MonoBehaviour
     {
         Vector3 diff = (transform.position - target.transform.position);
         float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-        GameObject bullet = Instantiate(projectile, transform.position + (-diff.normalized), Quaternion.Euler(0f, 0f, rot_z + 180));
+        GameObject bullet = ObjectPooler.SharedInstance.GetPooledObject("enemybullet");
+        if (bullet != null)
+        {
+            bullet.transform.position = transform.position + (-diff.normalized);
+            bullet.transform.rotation = Quaternion.Euler(0f, 0f, rot_z + 180);
+            bullet.SetActive(true);
+        }
+        //GameObject bullet = Instantiate(projectile, transform.position + (-diff.normalized), Quaternion.Euler(0f, 0f, rot_z + 180));
         bullet.GetComponent<ProjectileLogic>().target = target;
         bullet.GetComponent<ProjectileLogic>().attackDamage = attackDamage;
     }

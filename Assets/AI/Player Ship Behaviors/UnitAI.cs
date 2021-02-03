@@ -10,6 +10,7 @@ public class UnitAI : MonoBehaviour
     public LayerMask ableToHit;
     public GameObject projectile;
     public float hitBoxRadius = 0;
+    public string enemyTag = "enemy";
     // States for Moving
     private enum State
     {
@@ -82,6 +83,8 @@ public class UnitAI : MonoBehaviour
                 if(planetNode.GetComponent<PlanetController>().state == PlanetController.State.empty || planetNode.GetComponent<PlanetController>().state == PlanetController.State.enemy)
                 {
                     planetNode.GetComponent<PlanetController>().state = PlanetController.State.friendly;
+                    ResourceTracker.SharedInstance.planetCount += 1;
+                    ResourceTracker.SharedInstance.UpdateStats();
                 }
                 state = State.idle;
             }
@@ -98,8 +101,22 @@ public class UnitAI : MonoBehaviour
             MoveToOrbit();
         }
 
+        // Scan For Enemies
+        // Attack Enemy If Close Enough
+        if (Time.time - timeOfScan > scanDelay)
+        {
+            GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
+            //get 3 closest characters (to referencePos)
+            var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
+            if (Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
+            {
+                attacking = CombatState.firing;
+            }
+            timeOfScan = Time.time;
+        }
+
         // Attack if able
-        if(attacking == CombatState.firing)
+        if (attacking == CombatState.firing)
         {
             AttackEnemy();
         }
@@ -114,11 +131,6 @@ public class UnitAI : MonoBehaviour
     }
 
     // Behaviors
-
-    void Death()
-    {
-        Destroy(gameObject);
-    }
 
     // Orbit Planet
     void OrbitPlanet()
@@ -158,19 +170,12 @@ public class UnitAI : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag("enemy") && Mathf.Abs(timeOfScan - Time.time) >= scanDelay && attacking != CombatState.firing)
+        if (collision.IsTouching(gameObject.GetComponent<CircleCollider2D>()) && collision.CompareTag("enemybullet"))
         {
-            // Attack Enemy If Close Enough
-            GameObject[] enemies = GameObject.FindGameObjectsWithTag("enemy");
-            //get 3 closest characters (to referencePos)
-            var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
-            if (Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
-            {
-                attacking = CombatState.firing;
-            }
-            timeOfScan = Time.time;
+            health -= collision.GetComponent<ProjectileLogic>().attackDamage;
+            collision.gameObject.SetActive(false);
         }
-       
+
     }
     void AttackEnemy()
     {
@@ -202,7 +207,7 @@ public class UnitAI : MonoBehaviour
 
             if(hit.collider != null && hit.collider.CompareTag("enemy"))
             {
-                FireEffect(hit.collider.gameObject);
+               FireEffect(hit.collider.gameObject);
                 //Debug.DrawLine(transform.position, target.transform.position, Color.red);
                 //hit.collider.gameObject.GetComponent<EnemyUnitAI>().health -= attackDamage;
             }
@@ -220,9 +225,22 @@ public class UnitAI : MonoBehaviour
     {
         Vector3 diff = (transform.position - target.transform.position);
         float rot_z = Mathf.Atan2(diff.y, diff.x) * Mathf.Rad2Deg;
-        GameObject bullet = Instantiate(projectile, transform.position + (-diff.normalized), Quaternion.Euler(0f, 0f, rot_z+180));
+        GameObject bullet = ObjectPooler.SharedInstance.GetPooledObject("fighterbullet");
+        if (bullet != null)
+        {
+            bullet.transform.position = transform.position + (-diff.normalized);
+            bullet.transform.rotation = Quaternion.Euler(0f, 0f, rot_z + 180);
+            bullet.SetActive(true);
+        }
         bullet.GetComponent<ProjectileLogic>().target = target;
         bullet.GetComponent<ProjectileLogic>().attackDamage = attackDamage;
+    }
+
+    void Death()
+    {
+        Destroy(gameObject);
+        ResourceTracker.SharedInstance.unitCount -= 1;
+        ResourceTracker.SharedInstance.UpdateStats();
     }
 
 }
