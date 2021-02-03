@@ -57,6 +57,12 @@ public class UnitAI : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        // First thing to do is check if dead
+        if (health <= 0)
+        {
+            Death();
+        }
+
         if (planetNode.GetComponent<PlanetController>().state == PlanetController.State.enemy && attacking == CombatState.firing)
         {
             combat = PlanetCombat.attack;
@@ -106,12 +112,24 @@ public class UnitAI : MonoBehaviour
         if (Time.time - timeOfScan > scanDelay)
         {
             GameObject[] enemies = GameObject.FindGameObjectsWithTag(enemyTag);
+            if(enemies.Length == 0)
+            {
+                timeOfScan = Time.time;
+                attacking = CombatState.idle;
+                return;
+
+            }
             //get 3 closest characters (to referencePos)
             var target = enemies.OrderBy(t => (t.transform.position - transform.position).sqrMagnitude).FirstOrDefault();
             if (Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
             {
                 attacking = CombatState.firing;
             }
+            else
+            {
+                attacking = CombatState.idle;
+            }
+            
             timeOfScan = Time.time;
         }
 
@@ -119,12 +137,6 @@ public class UnitAI : MonoBehaviour
         if (attacking == CombatState.firing)
         {
             AttackEnemy();
-        }
-
-        // Death
-        if (health <= 0)
-        {
-            Death();
         }
 
 
@@ -181,6 +193,10 @@ public class UnitAI : MonoBehaviour
     {
         // Attack Enemy If Close Enough
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("enemy");
+        if(enemies.Length <= 0)
+        {
+            return;
+        }
         //get closest characters (to referencePos)
         float varySelection = Random.value;
         GameObject target;

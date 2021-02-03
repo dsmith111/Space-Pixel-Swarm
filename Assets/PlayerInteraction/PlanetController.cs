@@ -38,7 +38,8 @@ public class PlanetController : MonoBehaviour
         {
             GameObject[] myUnits =  GameObject.FindGameObjectsWithTag("unit");
             //get 3 closest characters (to referencePos)
-            var nClosest = myUnits.OrderBy(t => (t.transform.position - gameManager.selectedPlanet.transform.position).sqrMagnitude)
+            var samePlanetUnits = myUnits.Where(t => (t.GetComponent<UnitAI>().planetNode == gameManager.selectedPlanet));
+            var nClosest = samePlanetUnits.OrderBy(t => (t.transform.position - gameManager.selectedPlanet.transform.position).sqrMagnitude)
                                        .Take(10)   //or use .FirstOrDefault();  if you need just one
                                        .ToArray();
 

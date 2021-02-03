@@ -200,7 +200,7 @@ public class EnemyUnitAI : MonoBehaviour
         if (target && Mathf.Abs(transform.position.magnitude - target.transform.position.magnitude) <= attackDistance)
         {
             // Attack 
-            if (Mathf.Abs(timeSinceAttack - Time.time) < attackDelay + Random.Range(0, attackDelay/10))
+            if (Mathf.Abs(timeSinceAttack - Time.time) < attackDelay + Random.Range(0, attackDelay/3))
             {
                 return;
             }
