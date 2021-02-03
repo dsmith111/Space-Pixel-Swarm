@@ -49,4 +49,27 @@ public class GameManager : MonoBehaviour
         }
 
     }
+
+    public void ClearCommand()
+    {
+        command = Command.none;
+        Transform[] highLevel = GameObject.Find("CommandTab").GetComponentsInChildren<Transform>();
+        Text[] childColors = null;
+        foreach (Transform t in highLevel)
+        {
+            if (t.name == "Slider")
+            {
+                childColors = t.GetComponentsInChildren<Text>();
+                break;
+            }
+        }
+        if (childColors != null && childColors.Length > 0)
+        {
+            foreach(Text child in childColors)
+            {
+                child.color = Color.white;
+            }
+        }
+        
+    }
 }

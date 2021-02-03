@@ -52,7 +52,7 @@ public class PlanetController : MonoBehaviour
                     ship.GetComponent<UnitAI>().planetNode = gameObject;
                 }
             }
-            gameManager.MoveCommand();
+            gameManager.ClearCommand();
             return;
         }
         if(state == State.friendly)
